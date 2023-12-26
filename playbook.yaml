@@ -10,6 +10,8 @@
 
 - name: Change EC2 instance configuration
   hosts: myhosts
+  collections:
+    - amazon.aws
   vars:
     - secret_key: "{{ lookup('env', 'AWS_SECRET_KEY') }}"
     - access_key: "{{ lookup('env', 'AWS_ACCESS_KEY') }}"
@@ -42,7 +44,7 @@
             cidr_ip: 3.16.114.205/32
 
     - name: Update EC2 instance with new security group
-      amazon.aws.aws_ec2:
+      ec2_instance:
         instance_ids: "{{ instance_id }}"
         region: "{{ region }}"
         aws_secret_key: "{{ secret_key }}"
