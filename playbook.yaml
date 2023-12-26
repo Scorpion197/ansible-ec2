@@ -1,0 +1,86 @@
+- name: Check EC2 instance connectivity
+  hosts: myhosts
+  tasks:
+    - name: Ping my hosts
+      ansible.builtin.ping:
+
+    - name: Print message
+      ansible.builtin.debug:
+        msg: Hello world
+
+- name: Change EC2 instance configuration
+  hosts: myhosts
+  vars:
+    - secret_key: "{{ lookup('env', 'AWS_SECRET_KEY') }}"
+    - access_key: "{{ lookup('env', 'AWS_ACCESS_KEY') }}"
+    - instance_id: "{{ lookup('env', 'INSTANCE_ID') }}"
+    - region: "{{ lookup('env', 'AWS_REGION') }}"
+  tasks:
+    - name: Create security Group
+      ec2_group:
+        name: ansible_sg
+        description: "Security Group"
+        region: us-east-2
+        aws_secret_key: "{{ secret_key }}"
+        aws_access_key: "{{ access_key }}"
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 3.16.114.205/32
+          - proto: tcp
+            from_port: 81
+            to_port: 81
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 3.16.114.205/32
+
+    - name: Update EC2 instance with new security group
+      ec2_instance:
+        instance_ids: "{{ instance_id }}"
+        region: "{{ region }}"
+        aws_secret_key: "{{ secret_key }}"
+        aws_access_key: "{{ access_key }}"
+        security_group: ansible_sg
+
+- name: Configure and deploy custom nginx image container
+  hosts: myhosts
+  become: yes
+  vars:
+    user: ec2-user
+    dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
+    dockerhub_password: "{{ lookup('env', 'DOCKERHUB_PASSWORD') }}"
+    dockerhub_email: "{{ lookup('env', 'DOCKERHUB_EMAIL') }}"
+
+  tasks:
+    - name: Add user to root group
+      user:
+        name: "{{ user }}"
+        groups: root
+        state: present
+
+    - name: Login to docker
+      community.docker.docker_login:
+        username: "{{ dockerhub_username }}"
+        password: "{{ dockerhub_password }}"
+
+    - name: Pull custom nginx Image from registry
+      community.docker.docker_image:
+        name: scorpionkamel197/custom-nginx
+        source: pull
+
+    - name: Run container
+      community.docker.docker_container:
+        name: custom-nginx
+        image: scorpionkamel197/custom-nginx
+        state: started
+        ports:
+          - "81:80"
+
+        restart_policy: on-failure
