@@ -42,7 +42,7 @@
             cidr_ip: 3.16.114.205/32
 
     - name: Update EC2 instance with new security group
-      community.aws.ec2_instance:
+      amazon.aws.aws_ec2:
         instance_ids: "{{ instance_id }}"
         region: "{{ region }}"
         aws_secret_key: "{{ secret_key }}"
