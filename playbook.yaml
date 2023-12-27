@@ -69,17 +69,17 @@
         state: present
 
     - name: Login to docker
-      community.docker.docker_login:
+      docker_login:
         username: "{{ dockerhub_username }}"
         password: "{{ dockerhub_password }}"
 
     - name: Pull custom nginx Image from registry
-      community.docker.docker_image:
+      docker_image:
         name: scorpionkamel197/custom-nginx
         source: pull
 
     - name: Run container
-      community.docker.docker_container:
+      docker_container:
         name: custom-nginx
         image: scorpionkamel197/custom-nginx
         state: started
