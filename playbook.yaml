@@ -12,6 +12,7 @@
   hosts: myhosts
   collections:
     - amazon.aws
+    - community.docker
   vars:
     - secret_key: "{{ lookup('env', 'AWS_SECRET_KEY') }}"
     - access_key: "{{ lookup('env', 'AWS_ACCESS_KEY') }}"
